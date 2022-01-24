@@ -32,3 +32,5 @@ Route::get('/booking/{code}/seat', [\App\Http\Controllers\BookingController::cla
 Route::patch('/booking/{code}/seat', [\App\Http\Controllers\BookingController::class, 'selectSeat']);
 
 Route::post('/booking', [\App\Http\Controllers\BookingController::class, 'booking']);
+
+Route::get('/flight', [\App\Http\Controllers\FlightController::class, 'search']);
