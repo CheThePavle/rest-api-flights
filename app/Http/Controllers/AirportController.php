@@ -11,13 +11,14 @@ class AirportController extends Controller
     public function search (Request $request) {
         $q = $request->get('query');
 
+        $result = Airport::where('city', 'like', '%'.$q.'%')
+            ->orWhere('name', 'like', '%'.$q.'%')
+            ->orWhere('iata', 'like', '%'.$q.'%')
+            ->get();
+
         return response()->json([
             'data'=>[
-                'items'=>AirportResource::collection(
-                    Airport::where('city', 'like', '%'.$q.'%')
-                        ->orWhere('name', 'like', '%'.$q.'%')
-                        ->orWhere('iata', 'like', '%'.$q.'%')
-                        ->get())
+                'items'=>AirportResource::collection($result)
             ]
         ]);
     }
