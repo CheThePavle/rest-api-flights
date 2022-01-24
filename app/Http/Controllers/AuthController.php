@@ -30,12 +30,12 @@ class AuthController extends Controller
                     'message'=>'Validation error',
                     'errors'=>$validator->errors()
                 ]
-            ])->setStatusCode(422);
+            ], 422);
         }
 
         User::create($data);
 
-        return response()->json()->setStatusCode(204);
+        return response()->json(null, 204);
     }
 
     public function login(Request $request)
@@ -57,7 +57,7 @@ class AuthController extends Controller
                     'message'=>'Validation error',
                     'errors'=>$validator->errors()
                 ]
-            ])->setStatusCode(422);
+            ], 422);
         }
 
         $user = User::where('phone', $request->phone)->first();
