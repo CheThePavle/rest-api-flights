@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Booking;
+use App\Models\Passenger;
 use Illuminate\Http\Request;
 use DB;
+use Validator;
 
 class BookingController extends Controller
 {
@@ -39,5 +40,58 @@ class BookingController extends Controller
                 'occupied_back'=>$occupied_back
             ]
         ]);
+    }
+
+    public function selectSeat($code ,Request $request) {
+        $data = $request->all();
+
+        $rules = [
+            'passenger'=>'required',
+            'seat'=>'required',
+            'type'=>'required|in:from,back'
+        ];
+
+        $validator = Validator::make($data, $rules);
+
+        if ($validator->fails())
+        {
+            return response()->json([
+                'error'=>[
+                    'code'=>422,
+                    'message'=>'Validation error',
+                    'errors'=>$validator->errors()
+                ]
+            ], 422);
+        }
+
+        $checkPassenger = Passenger::where('id', $request->passenger)->first();
+        if (!$checkPassenger) {
+            return response()->json([
+                'error'=>[
+                    'code'=>403,
+                    'message'=>'Passenger does not apply to booking'
+                ]
+            ], 403);
+        }
+
+        $place = $request->type == 'from' ? 'place_from' : 'place_back';
+        $checkBooking = Passenger::
+                        where('booking_id', '=', $checkPassenger->booking_id)
+                        ->where($place, '=', $request->seat)
+                        ->get();
+
+        if (count($checkBooking) > 0) {
+            return response()->json([
+                'error'=>[
+                    'code'=>422,
+                    'message'=>'Seat is occupied'
+                ]
+            ], 422);
+        }
+
+        Passenger::where('id', '=', $request->passenger)
+            -> update([$place=>$request->seat]);
+
+        return $checkBooking;
     }
 }

@@ -28,3 +28,5 @@ Route::get('/airport', [\App\Http\Controllers\AirportController::class, 'search'
 Route::get('/user', [\App\Http\Controllers\UserController::class, 'findByToken']);
 
 Route::get('/booking/{code}/seat', [\App\Http\Controllers\BookingController::class, 'findSeatByCode']);
+
+Route::patch('/booking/{code}/seat', [\App\Http\Controllers\BookingController::class, 'selectSeat']);
