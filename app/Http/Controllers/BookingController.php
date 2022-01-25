@@ -46,7 +46,8 @@ class BookingController extends Controller
         ]);
     }
 
-    public function selectSeat($code ,Request $request) {
+    // протестировать
+    public function selectSeat(Request $request) {
         $data = $request->all();
 
         $rules = [
