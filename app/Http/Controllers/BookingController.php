@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\PassengerResource;
 use App\Models\Booking;
 use App\Models\Passenger;
+use App\Models\User;
 use Illuminate\Http\Request;
 use DB;
 use Validator;
@@ -225,6 +226,88 @@ class BookingController extends Controller
                 'cost'=>$sumCostFlights,
                 'flights'=>$flights,
                 'passengers'=>PassengerResource::collection($passengers)
+            ]
+        ]);
+    }
+
+    public function findByTokenUser(Request $request) {
+        $token = $request->bearerToken();
+
+        $getDN = User::where('api_token', $token)->first();
+
+        if (!$getDN) {
+            return response()->json([
+                'error' => [
+                    'code' => 401,
+                    'message' => 'Unauthorized'
+                ]
+            ], 401);
+        }
+        $getDN = $getDN->document_number;
+
+        $arryBookingsId = DB::select("SELECT b.id FROM bookings as b
+                            JOIN passengers as p ON p.booking_id = b.id
+                            WHERE p.document_number = ?;", [$getDN]);
+
+        $items = [];
+        foreach ($arryBookingsId as $el) {
+            $getFlights = DB::select("SELECT f.id as 'flight_id', f.flight_code, f.cost,
+                                    fromA.city as 'fromCity', fromA.name as 'fromAirport', fromA.iata as 'fromIata', f.time_from as 'fromTime',
+                                    toA.city as 'toCity', toA.name as 'toAirport', toA.iata as 'toIata', f.time_to as 'toTime',
+                                    b.date_from as 'fromDate', b.date_back as 'backDate', b.id as 'booking_id', b.code
+                                    FROM airports as fromA
+                                    JOIN (flights as f JOIN airports as toA ON toA.id = f.from_id)
+                                    ON fromA.id = f.to_id
+                                    JOIN bookings as b ON b.flight_from = f.id OR b.flight_back = f.id
+                                    WHERE b.id = ?;", [$el->id]);
+
+            if (count($getFlights) > 0) {
+                $sumCost = 0;
+                $flights = [];
+
+                foreach ($getFlights as $item) {
+                    $sumCost = $sumCost + $item->cost;
+                }
+
+                $passengers = Passenger::where('booking_id', '=', $getFlights[0]->booking_id)->get();
+                $countPassengers = count($passengers);
+                $sumCost = $countPassengers > 0 ? $sumCost * $countPassengers : $sumCost;
+
+                foreach ($getFlights as $item) {
+                    $flight = [
+                        'flight_id'=>$item->flight_id,
+                        'flight_code'=>$item->flight_code,
+                        'from'=>[
+                            'city'=>$item->fromCity,
+                            'airport'=>$item->fromAirport,
+                            'iata'=>$item->fromIata,
+                            'date'=>$item->fromDate,
+                            'time'=>date('H:i' ,strtotime($item->fromTime))
+                        ],
+                            'to'=>[
+                            'city'=>$item->toCity,
+                            'airport'=>$item->toAirport,
+                            'iata'=>$item->toIata,
+                            'date'=>$item->backDate,
+                            'time'=>date('H:i' ,strtotime($item->toTime))
+                        ],
+                        'cost'=>$item->cost,
+                        'availability'=>156
+                    ];
+                    array_push($flights, $flight);
+                }
+                array_push($items, [
+                    'code'=>$getFlights[0]->code,
+                    'cost'=>$sumCost,
+                    'flights'=>$flights,
+                    'passengers'=>PassengerResource::collection($passengers)
+                ]);
+            }
+        }
+
+        return response()->json([
+            'data'=>[
+                'items'=>$items
             ]
         ]);
     }
