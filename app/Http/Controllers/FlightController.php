@@ -14,8 +14,8 @@ class FlightController extends Controller
                             fromA.city as 'fromCity', fromA.name as 'fromAirport', fromA.iata as 'fromIata', f.time_from as 'fromTime',
                             toA.city as 'toCity', toA.name as 'toAirport', toA.iata as 'toIata', f.time_to as 'toTime'
                             FROM airports as fromA
-                            JOIN (flights as f JOIN airports as toA ON toA.id = f.from_id)
-                            ON fromA.id = f.to_id
+                            JOIN (flights as f JOIN airports as toA ON toA.id = f.to_id)
+                            ON fromA.id = f.from_id
                             WHERE fromA.iata = ? AND toA.iata = ?;", [$from, $to]);
 
         $flights = [];
