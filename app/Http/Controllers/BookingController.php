@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PassengerResource;
 use App\Models\Booking;
 use App\Models\Passenger;
 use Illuminate\Http\Request;
@@ -169,5 +170,62 @@ class BookingController extends Controller
                 'code'=>$code
             ]
         ] , 201);
+    }
+
+    public function search($code) {
+        $getFlights = DB::select("SELECT f.id as 'flight_id', f.flight_code, f.cost,
+                                    fromA.city as 'fromCity', fromA.name as 'fromAirport', fromA.iata as 'fromIata', f.time_from as 'fromTime',
+                                    toA.city as 'toCity', toA.name as 'toAirport', toA.iata as 'toIata', f.time_to as 'toTime',
+                                    b.date_from as 'fromDate', b.date_back as 'backDate', b.id as 'booking_id'
+                                    FROM airports as fromA
+                                    JOIN (flights as f JOIN airports as toA ON toA.id = f.from_id)
+                                    ON fromA.id = f.to_id
+                                    JOIN bookings as b ON b.flight_from = f.id OR b.flight_back = f.id
+                                    WHERE b.code = ?;", [$code]);
+
+        $flights = [];
+        $sumCostFlights = 0;
+        $bookingId = NULL;
+        if (count($getFlights) > 0) {
+            foreach ($getFlights as &$el) {
+                $sumCostFlights = $sumCostFlights + $el->cost;
+
+                array_push($flights , [
+                    'flight_id'=>$el->flight_id,
+                    'flight_code'=>$el->flight_code,
+                    'from'=>[
+                        'city'=>$el->fromCity,
+                        'airport'=>$el->fromAirport,
+                        'iata'=>$el->fromIata,
+                        'date'=>$el->fromDate,
+                        'time'=>date('H:i' ,strtotime($el->fromTime))
+                    ],
+                    'to'=>[
+                        'city'=>$el->toCity,
+                        'airport'=>$el->toAirport,
+                        'iata'=>$el->toIata,
+                        'date'=>$el->backDate,
+                        'time'=>date('H:i' ,strtotime($el->toTime))
+                    ],
+                    'cost'=>$el->cost,
+                    'availability'=>156
+                ]);
+            }
+
+            $bookingId = $getFlights[0]->booking_id;
+        }
+
+        $passengers = Passenger::where('booking_id', '=', $bookingId)->get();
+        $countPassengers = count($passengers);
+        $sumCostFlights = $countPassengers > 0 ? $sumCostFlights * $countPassengers : $sumCostFlights;
+
+        return response()->json([
+            'data'=>[
+                'code'=>$code,
+                'cost'=>$sumCostFlights,
+                'flights'=>$flights,
+                'passengers'=>PassengerResource::collection($passengers)
+            ]
+        ]);
     }
 }
