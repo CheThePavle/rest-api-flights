@@ -36,3 +36,5 @@ Route::post('/booking', [\App\Http\Controllers\BookingController::class, 'bookin
 Route::get('/flight', [\App\Http\Controllers\FlightController::class, 'search']);
 
 Route::get('/booking/{code}', [\App\Http\Controllers\BookingController::class, 'search']);
+
+Route::get('/user/booking', [\App\Http\Controllers\BookingController::class, 'findByTokenUser']);
