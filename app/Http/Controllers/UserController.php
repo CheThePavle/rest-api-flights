@@ -7,26 +7,25 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function findByToken(Request $request)
-    {
+    public function search(Request $request) {
         $token = $request->bearerToken();
 
-        $check = User::where('api_token', $token)->first();
+        $user = User::where('api_token', '=', $token)->first();
 
-        if ($check) {
-            return [
-                'first_name'=>$check->first_name,
-                'last_name'=>$check->last_name,
-                'phone'=>$check->phone,
-                'document_number'=>$check->document_number
-            ];
+        if (!$user) {
+            return response()->json([
+                'error'=>[
+                    'code'=>401,
+                    'message'=>'Unauthorized'
+                ]
+            ], 401);
         }
 
         return response()->json([
-            'error' => [
-                'code' => 401,
-                'message' => 'Unauthorized'
-            ]
-        ], 401);
+            'first_name'=>$user->first_name,
+            'last_name'=>$user->last_name,
+            'phone'=>$user->phone,
+            'document_number'=>$user->document_number
+        ]);
     }
 }

@@ -8,22 +8,18 @@ use Validator;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $data = $request->all();
-
+    public function register(Request $request) {
         $rules = [
             'first_name'=>'required',
             'last_name'=>'required',
-            'phone'=>'required|unique:users',
+            'phone'=>'required|unique:users,phone',
             'document_number'=>'required|numeric|digits:10',
             'password'=>'required'
         ];
 
-        $validator = Validator::make($data, $rules);
+        $validator = Validator::make($request->all(), $rules);
 
-        if ($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json([
                 'error'=>[
                     'code'=>422,
@@ -33,24 +29,20 @@ class AuthController extends Controller
             ], 422);
         }
 
-        User::create($data);
+        User::create($request->all());
 
-        return response()->json(null, 204);
+        return response()->json(NULL, 204);
     }
 
-    public function login(Request $request)
-    {
-        $data = $request->all();
-
+    public function login(Request $request) {
         $rules = [
             'phone'=>'required',
             'password'=>'required'
         ];
 
-        $validator = Validator::make($data, $rules);
+        $validator = Validator::make($request->all(), $rules);
 
-        if ($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json([
                 'error'=>[
                     'code'=>422,
@@ -60,25 +52,23 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = User::where('phone', $request->phone)->first();
-        if($user) {
-            if($request->password == $user->password) {
-                return response()->json([
-                    'data' => [
-                        'token' => $user->generateToken(),
-                    ]
-                ]);
-            }
+        $check = User::where('phone', '=', $request->phone)
+                        ->where('password', '=', $request->password)->first();
+
+        if ($check) {
+            return response()->json([
+                'data'=>[
+                    'token'=>$check->generateToken()
+                ]
+            ]);
         }
 
         return response()->json([
-            'error' => [
-                'code' => 401,
-                'message' => 'Unauthorized',
-                'errors' => [
-                    'phone' => [
-                        'phone or password incorrect',
-                    ]
+            'error'=>[
+                'code'=>401,
+                'message'=>'Unauthorized',
+                'errors'=>[
+                    'phone'=>['phone or password incorrect']
                 ]
             ]
         ], 401);

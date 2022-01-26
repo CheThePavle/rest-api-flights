@@ -11,8 +11,8 @@ class Booking extends Model
 
     protected $fillable = [
         'flight_from',
-        'date_from',
         'flight_back',
+        'date_from',
         'date_back',
         'code'
     ];
