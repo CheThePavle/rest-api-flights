@@ -20,31 +20,31 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 // Регистрация
-Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
+Route::post('register', [\App\Http\Controllers\AuthController::class, 'register']);
 
-// Авторизация
-Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
+// Аутентификация
+Route::post('login', [\App\Http\Controllers\AuthController::class, 'login']);
 
 // Список аэропортов
-Route::get('/airport', [\App\Http\Controllers\AirportController::class, 'search']);
-
-// Получение информации о пользователе
-Route::get('/user', [\App\Http\Controllers\UserController::class, 'findByToken']);
-
-// Получение занятых мест в самолете
-Route::get('/booking/{code}/seat', [\App\Http\Controllers\BookingController::class, 'findSeatByCode']);
-
-// Выбор места в салоне
-Route::patch('/booking/{code}/seat', [\App\Http\Controllers\BookingController::class, 'selectSeat']);
+Route::get('airport', [\App\Http\Controllers\AirportController::class, 'search']);
 
 // Оформление бронирования
-Route::post('/booking', [\App\Http\Controllers\BookingController::class, 'booking']);
+Route::post('booking', [\App\Http\Controllers\BookingController::class, 'create']);
+
+// Получение занятых мест в самолете
+Route::get('booking/{code}/seat', [\App\Http\Controllers\BookingController::class, 'findSeatByCode']);
+
+// Выбор места в салоне
+Route::patch('booking/{code}/seat', [\App\Http\Controllers\BookingController::class, 'changeSeat']);
+
+// Получение информации о пользователе
+Route::get('user', [\App\Http\Controllers\UserController::class, 'search']);
 
 // Поиск рейсов
-Route::get('/flight', [\App\Http\Controllers\FlightController::class, 'search']);
+Route::get('flight', [\App\Http\Controllers\FlightController::class, 'search']);
 
 // Информация о бронировании
-Route::get('/booking/{code}', [\App\Http\Controllers\BookingController::class, 'search']);
+Route::get('booking/{code}', [\App\Http\Controllers\BookingController::class, 'search']);
 
 // Получение своих бронирований
-Route::get('/user/booking', [\App\Http\Controllers\BookingController::class, 'findByTokenUser']);
+Route::get('user/booking', [\App\Http\Controllers\BookingController::class, 'findByToken']);

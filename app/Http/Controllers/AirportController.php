@@ -8,17 +8,24 @@ use Illuminate\Http\Request;
 
 class AirportController extends Controller
 {
-    public function search (Request $request) {
+    public function search(Request $request) {
         $q = $request->get('query');
+        if (!$q) {
+            return response()->json([
+                'error'=>[
+                    'code'=>422,
+                    'message'=>'query параметр не передан'
+                ]
+            ], 422);
+        }
 
-        $result = Airport::where('city', 'like', '%'.$q.'%')
+        $airports = Airport::where('city', 'like', '%'.$q.'%')
             ->orWhere('name', 'like', '%'.$q.'%')
-            ->orWhere('iata', 'like', '%'.$q.'%')
-            ->get();
+            ->orWhere('iata', 'like', '%'.$q.'%')->get();
 
         return response()->json([
             'data'=>[
-                'items'=>AirportResource::collection($result)
+                'items'=>AirportResource::collection($airports)
             ]
         ]);
     }
